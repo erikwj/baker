@@ -253,7 +253,7 @@ trait TestRecipeHelper
     """.stripMargin)
 
   protected val defaultActorSystem = ActorSystem("BakerSpec", localConfig)
-  protected val clusterActorSystem = ActorSystem("BakerSpec", levelDbConfig("BakerSpec", 7001))
+  protected val clusterActorSystem = ActorSystem("BakerSpec", levelDbConfig("BakerSpec", 7010))
 
   override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(defaultActorSystem)
