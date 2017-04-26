@@ -36,7 +36,7 @@ class GracefulShutdownActor(shardHandOverTimeout: FiniteDuration, typeNames: Seq
 
   def waitForLeaveCommand(regions: Set[ActorRef]): Receive = {
     case Leave =>
-      log.warning(s"Gracefully shutting down (handing over) regions: ${typeNames.mkString(",")}")
+      log.info(s"Gracefully shutting down (handing over) regions: ${typeNames.mkString(",")}")
       regions.foreach { region =>
         context watch region
         region ! ShardRegion.GracefulShutdown

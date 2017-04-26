@@ -11,7 +11,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object Util {
-  def createPersistenceWarmupActor()(implicit actorSystem: ActorSystem, timeout: FiniteDuration) = {
+  def createPersistenceWarmupActor()(implicit actorSystem: ActorSystem, timeout: Timeout) = {
     val actorRef = actorSystem.actorOf(Props(new PersistentActor() {
       override val persistenceId = s"dummy-${java.util.UUID.randomUUID()}"
       override def receiveCommand = {
@@ -20,7 +20,7 @@ object Util {
       override def receiveRecover = Map.empty
     }))
 
-    Await.result(actorRef.ask("ping")(Timeout(timeout)), timeout)
+    Await.result(actorRef.ask("ping")(timeout), timeout.duration)
     actorRef ! PoisonPill
   }
 
@@ -47,7 +47,7 @@ object Util {
     Await.result(actor.ask(PersistAllEvents(serializableEvents)), timeout.duration)
   }
 
-  def handOverShardsAndLeaveCluster(typeNames: Seq[String])(implicit timeout: Timeout, actorSystem: ActorSystem): Unit = {
+  def handOverShardsAndLeaveCluster(typeNames: Seq[String])(implicit actorSystem: ActorSystem, timeout: Timeout): Unit = {
 
     // first hand over the shards
     val actor = actorSystem.actorOf(GracefulShutdownActor.props(timeout.duration, typeNames))

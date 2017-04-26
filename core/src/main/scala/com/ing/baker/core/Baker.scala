@@ -114,7 +114,7 @@ class Baker(val recipe: Recipe,
         cluster.registerOnMemberRemoved {
           actorSystem.terminate()
         }
-        implicit val akkaTimeout = Timeout(timeout);
+        implicit val akkaTimeout = Timeout(timeout)
         Util.handOverShardsAndLeaveCluster(Seq(recipe.name))
       case Success(cluster) =>
         log.debug("ActorSystem not a member of cluster")
