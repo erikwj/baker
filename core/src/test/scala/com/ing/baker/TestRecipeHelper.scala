@@ -5,7 +5,6 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import com.ing.baker.api.Event
-import com.ing.baker.compiler.ValidationSettings
 import com.ing.baker.core.{Baker, Interaction}
 import com.ing.baker.java_api.{FiresEvent, ProcessId, ProvidesIngredient, RequiresIngredient}
 import com.ing.baker.scala_api._
@@ -116,7 +115,7 @@ trait SendInvoice extends Interaction {
   //instead of an event, an interaction can directly provide a new ingredient
   //any primitive type or a case class is supported
   @ProvidesIngredient("invoiceWasSent")
-  def apply(@RequiresIngredient("customerInfo") customerInfo: Customer): Boolean
+  def apply(@RequiresIngredient("customerInfo") customerInfo: Customer): String
 }
 
 trait TestRecipeHelper
@@ -169,6 +168,11 @@ trait TestRecipeHelper
   protected val testNonMatchingReturnTypeInteractionMock: NonMatchingReturnTypeInteraction =
     mock[NonMatchingReturnTypeInteraction]
 
+  protected val validateOrderMock: ValidateOrder = mock[ValidateOrder]
+  protected val manufactureGoodsMock: ManufactureGoods = mock[ManufactureGoods]
+  protected val shipGoodsMock: ShipGoods = mock[ShipGoods]
+  protected val sendInvoiceMock: SendInvoice = mock[SendInvoice]
+
   protected val mockImplementations: Map[Class[_], () => AnyRef] =
     Map(
       classOf[InteractionOne] -> (() => testInteractionOneMock),
@@ -182,6 +186,13 @@ trait TestRecipeHelper
       classOf[NonSerializableEventInteraction] -> (() => testNonSerializableEventInteractionMock),
       classOf[NonMatchingReturnTypeInteraction] -> (() =>
         testNonMatchingReturnTypeInteractionMock))
+
+  protected val mockWebshopImplementations: Map[Class[_], () => AnyRef] =
+    Map(
+      classOf[ValidateOrder] -> (() => validateOrderMock),
+      classOf[ManufactureGoods] -> (() => testInteractionTwoMock),
+      classOf[ShipGoods] -> (() => shipGoodsMock),
+      classOf[SendInvoice] -> (() => sendInvoiceMock))
 
   protected val localConfig: Config =
     ConfigFactory.parseString(
@@ -242,6 +253,7 @@ trait TestRecipeHelper
     """.stripMargin)
 
   protected val defaultActorSystem = ActorSystem("BakerSpec", localConfig)
+  protected val clusterActorSystem = ActorSystem("BakerSpec", levelDbConfig("BakerSpec", 7001))
 
   override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(defaultActorSystem)
@@ -266,8 +278,6 @@ trait TestRecipeHelper
       events = Set(classOf[InitialEvent], classOf[InitialEventExtendedName], classOf[SecondEvent], classOf[NotUsedSensoryEvent])
     )
   }
-
-  private def getFinTechRecipe() = ???
 
   protected def getWebshopRecipe(): SRecipe = {
     SRecipe(
@@ -342,9 +352,14 @@ trait TestRecipeHelper
     when(testInteractionSixMock.apply(anyString())).thenReturn(interactionSixIngredient)
 
     new Baker(recipe = recipe,
-      validationSettings = ValidationSettings.defaultValidationSettings,
       actorSystem = actorSystem,
       implementations = mockImplementations)
+  }
+
+  protected def setupBakerWithWebshopRecipe(): Baker = {
+    new Baker(getWebshopRecipe(),
+      mockWebshopImplementations,
+      actorSystem = clusterActorSystem)
   }
 
   protected def timeBlockInMilliseconds[T](block: => T): Long = {

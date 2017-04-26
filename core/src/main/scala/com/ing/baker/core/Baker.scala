@@ -126,14 +126,14 @@ class Baker(val recipe: Recipe,
   }
 
   /**
-    * Creates an instance of the  process using the recipe.
+    * Creates a process instance out of the recipe.
     *
     * @param processId A unique process id.
     */
   def bake(processId: java.util.UUID): ProcessState = Await.result(bakeAsync(processId), bakeTimeout)
 
   /**
-    * Asynchronously creates an instance of the  process using the recipe.
+    * Asynchronously creates a process instance of the recipe.
     *
     * @param processId A unique process id.
     * @return A future of the initial process state.
@@ -216,7 +216,6 @@ class Baker(val recipe: Recipe,
     val classes: Seq[String] = events.map(x => x.getClass.getSimpleName)
     RecipeVisualizer.generateDot(compiledRecipe.petriNet.innerGraph, x => true, classes)
   }
-
 
   /**
     * Get all state that is or was available in the Petri Net marking.
