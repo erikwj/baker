@@ -1,9 +1,10 @@
 package com.ing.baker.java_api
 
-import com.ing.baker.compiler.CompiledRecipe
-
+import com.ing.baker.compiler.{CompiledRecipe, RecipeAnalysis}
 import com.ing.baker.RecipeVisualizer._
+import io.kagera.api.PetriNetAnalysis
 
+import scala.annotation.varargs
 import scala.collection.JavaConverters._
 
 /**
@@ -49,4 +50,7 @@ case class JCompiledRecipe private(private val compiledRecipe: CompiledRecipe) {
   def getFilteredRecipeVisualization(filters: Array[String]): String =
     compiledRecipe.petriNet.innerGraph.toDot((current) =>
       filters.forall(filter => !current.contains(filter)))
+
+  @varargs
+  def isDeliverable(ingredients: String*) = RecipeAnalysis.isDeliverable(compiledRecipe, ingredients.toSet)
 }

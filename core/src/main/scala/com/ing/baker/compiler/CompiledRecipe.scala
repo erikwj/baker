@@ -4,7 +4,9 @@ import com.ing.baker.compiler.transitions.InteractionTransition
 import com.ing.baker.RecipeVisualizer._
 import com.ing.baker.api.Event
 import com.ing.baker.core.ProcessState
+import io.kagera.api._
 import io.kagera.api.colored._
+import io.kagera.api.multiset._
 import io.kagera.dot.{GraphDot, PetriNetDot}
 
 /**
